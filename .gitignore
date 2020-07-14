@@ -1,0 +1,4 @@
+dash1
+*.pyc
+.DS_Store
+.env
