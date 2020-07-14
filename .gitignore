@@ -3,4 +3,5 @@ dash1
 .DS_Store
 .env
 test.py
-twitter_credentials.py
+twitter_credentials.pkl
+data

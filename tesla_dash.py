@@ -42,7 +42,7 @@ yf.pdr_override() #use pandas_datareader
 
 #app layout using some Boostrap components
 app.layout = dbc.Container([
-    html.H1('Tesla Stock Dashboard'),
+    html.H1('Tesla Stock & Twitter Dashboard'),
     html.Hr(),
     html.Label('Select start and end dates:'),
     html.Br(),
