@@ -27,16 +27,20 @@ import pickle
 
 
 app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
-server = app.server
 
-yf.pdr_override() #use pandas_datareader
+
+#read some older tweets for start and sort them from the most popular
 df = pd.read_csv('data/20200706_102141_Tesla_tweets.csv')
 df_pop = df[['retweetcount','text']]
 df_pop = df_pop.drop_duplicates(subset='text').reset_index(drop=True)
 df_pop = df_pop.sort_values(by=['retweetcount'],ascending=False).reset_index(drop=True)
 df2 = df_pop[['text']]
 df2.columns = ['Tweeter Feed']
+yf.pdr_override() #use pandas_datareader
 
+
+
+#app layout using some Boostrap components
 app.layout = dbc.Container([
     html.H1('Tesla Stock Dashboard'),
     html.Hr(),
@@ -87,7 +91,7 @@ app.layout = dbc.Container([
       ],fluid=True)
       ],fluid=True)
 
-
+#all functions used to update the app
 @app.callback(
     Output('my_graph', 'figure'),
     [Input('submit-button', 'n_clicks')],
@@ -118,9 +122,8 @@ def getData():
     api = tweepy.API(auth)
     search_words = "#Tesla"
     date_since = datetime.date.today()- datetime.timedelta(days=1)
-    numTweets = 2500
+    numTweets = 2500 #twitter api doesnt allow to fetch more data in one call
     numRuns = 1
-    # Call the function scraptweets
     df = scraptweets(api, search_words, date_since, numTweets, numRuns)
     df_pop = df[['retweetcount','text']]
     df_pop = df_pop.drop_duplicates(subset='text').reset_index(drop=True)
@@ -130,15 +133,28 @@ def getData():
     return df2.to_dict('records')
 
 def Tweepy_auth():
-  Twitter=pickle.load(open('file.pkl','rb'))
-  consumer_key = Twitter['Consumer Key']
-  consumer_secret = Twitter['Consumer Secret']
-  access_key = Twitter['Access Token']
-  access_secret = Twitter['Access Token Secret']
-  # Pass your twitter credentials to tweepy via its OAuthHandler
-  auth = OAuthHandler(consumer_key, consumer_secret)
-  auth.set_access_token(access_key, access_secret)
-  return auth
+    #If you dont have your twitter api credentials, you have to get them first and then provide those here
+    if not os.path.exists('twitter_credentials.pkl'):
+        Twitter={}
+        Twitter['Consumer Key'] = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        Twitter['Consumer Secret'] = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        Twitter['Access Token'] = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        Twitter['Access Token Secret'] = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        with open('secret_twitter_credentials.pkl','wb') as f:
+            pickle.dump(Twitter, f)
+    else:
+        Twitter=pickle.load(open('twitter_credentials.pkl','rb'))
+        #saving twitter api credentials as a pickle file prevents you from
+        #sharing sensitive information in your scripts
+
+    consumer_key = Twitter['Consumer Key']
+    consumer_secret = Twitter['Consumer Secret']
+    access_key = Twitter['Access Token']
+    access_secret = Twitter['Access Token Secret']
+    # Pass your twitter credentials to tweepy via its OAuthHandler
+    auth = OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_key, access_secret)
+    return auth
 
 def scraptweets(api,search_words, date_since, numTweets, numRuns):
     #function from: https://medium.com/@leowgriffin/scraping-tweets-with-tweepy-python-59413046e788
@@ -207,6 +223,6 @@ def scraptweets(api,search_words, date_since, numTweets, numRuns):
     return db_tweets
     print('Total time taken to scrap is {} minutes.'.format(round(program_end - program_start)/60, 2))
 
-
+#run the app
 if __name__ == '__main__':
     app.run_server()

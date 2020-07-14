@@ -2,3 +2,5 @@ dash1
 *.pyc
 .DS_Store
 .env
+test.py
+twitter_credentials.py
